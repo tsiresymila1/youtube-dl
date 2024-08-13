@@ -8,6 +8,7 @@ use command::video::{
     suggest_video,
     download_video
 };
+use crate::command::video::{check_ffmpeg_installed, show_in_folder};
 
 mod command;
 mod serialize;
@@ -30,7 +31,9 @@ async fn main() {
             get_video_info,
             search_video,
             suggest_video,
-            download_video
+            download_video,
+            show_in_folder,
+            check_ffmpeg_installed
         ])
         .run(tauri::generate_context!())
         .expect("error while running Youtube dl application");

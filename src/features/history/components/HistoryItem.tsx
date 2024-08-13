@@ -1,17 +1,37 @@
 import { useHistoryStore, VideoHistory } from "@/store/history.ts";
 import { listen } from '@tauri-apps/api/event'
 
-import { Box, Card, CardActionArea, CardContent, LinearProgress, Stack, Typography } from "@mui/material";
+import {
+    Card,
+    CardActionArea,
+    CardActions,
+    CardContent,
+    IconButton,
+    LinearProgress,
+    Stack,
+    Typography
+} from "@mui/material";
 import { useEffect } from "react";
+import { Check, Delete, Folder } from "@mui/icons-material";
+import { openInFolder } from "@/api/command.ts";
 
 export type HistoryProps = {
     history: VideoHistory
 }
 export const HistoryItem = ({history}: HistoryProps) => {
-    const {updateProgress} = useHistoryStore()
+    const {updateHistory, deleteHistory} = useHistoryStore()
     useEffect(() => {
-        listen<{id: string, progress: number}>(`_${history.video.videoId}`, (event) => {
-            updateProgress(event.payload.id, event.payload.progress)
+        listen<{
+            id: string,
+            progress: number,
+            storage: string
+        }>(`download_progress_${history.video.videoId}`, (event) => {
+            if (event.payload.progress >= 100) {
+                updateHistory(event.payload.id, "storage", event.payload.storage)
+            }else{
+                updateHistory(event.payload.id, "merging", true)
+            }
+            updateHistory(event.payload.id, "progress", event.payload.progress)
         }).then(() => null)
     }, [])
     return <CardActionArea>
@@ -21,10 +41,38 @@ export const HistoryItem = ({history}: HistoryProps) => {
                     <Typography fontWeight={700} variant="body1" component="div">
                         {history.video.title}
                     </Typography>
-                    {history.progress < 100 ? <Box sx={{width: '100%'}}>
-                        <LinearProgress variant="determinate" value={history.progress}/>
-                    </Box> : null}
                 </CardContent>
+                <CardActions>
+                    {history.progress < 100 ?
+                        <Stack width="100%">
+                            <LinearProgress
+                                variant={
+                                    history.progress === 0 ? "indeterminate" : "determinate"
+                                }
+                                value={history.progress}
+                            />
+                            <Typography variant="body1">
+                                {history.progress} %
+                            </Typography>
+                        </Stack> :
+                        <Stack
+                            direction="row"
+                            justifyContent="space-between"
+                            alignItems="center"
+                            width="100%"
+                        >
+                            <Stack direction="row">
+                                <IconButton onClick={() => openInFolder(history.storage)}>
+                                    <Folder/>
+                                </IconButton>
+                                <IconButton onClick={() => deleteHistory(history.video.videoId)}>
+                                    <Delete color="error"/>
+                                </IconButton>
+                            </Stack>
+                            <Check color="success"/>
+                        </Stack>}
+
+                </CardActions>
             </Stack>
         </Card>
     </CardActionArea>

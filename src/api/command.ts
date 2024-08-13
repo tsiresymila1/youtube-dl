@@ -41,6 +41,14 @@ export const getVideoInfo = async (videoId: String) => {
     return await invoke<VideoInfo>("get_video_info", {url: videoId})
 }
 
-export const downloadVideo = async (id: String, quality: String, filename: String) => {
-    return await invoke<void>("download_video", {id, quality, filename})
+export const downloadVideo = async (id: String, format: number, filename: String) => {
+    return await invoke<void>("download_video", {id, format,filename})
+}
+
+export const checkDownload = async () => {
+    return await invoke<boolean>("check_ffmpeg_installed")
+}
+
+export const openInFolder = async (path: String) => {
+    await invoke<void>("show_in_folder", {path})
 }

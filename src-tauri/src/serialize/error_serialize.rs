@@ -24,6 +24,7 @@ pub enum SerializableVideoError {
     LiveStreamNotSupported,
     CookieError,
     FFmpeg(String),
+    VideoPlayerResponseError(String)
 }
 
 impl From<VideoError> for SerializableVideoError {
@@ -49,6 +50,7 @@ impl From<VideoError> for SerializableVideoError {
             VideoError::ChildProcessError(err) => SerializableVideoError::ChildProcessError(err),
             VideoError::LiveStreamNotSupported => SerializableVideoError::LiveStreamNotSupported,
             VideoError::CookieError => SerializableVideoError::CookieError,
+            VideoError::VideoPlayerResponseError(err) => SerializableVideoError::VideoPlayerResponseError(err),
             // #[cfg(feature = "ffmpeg")]
             VideoError::FFmpeg(err) => SerializableVideoError::FFmpeg(err),
         }

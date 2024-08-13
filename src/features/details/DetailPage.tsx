@@ -1,11 +1,11 @@
 import { Screen } from "@/components/Screen.tsx";
-import { useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import { useQuery } from "react-query";
 import { getVideoInfo, Video } from "@/api/command.ts";
 import ShowMoreText from "react-show-more-text";
 import { Card, CardContent, CardMedia, IconButton, ListItem, ListItemText, Stack, Typography } from "@mui/material";
 import ReactPlayer from "react-player";
-import { FileDownload, ThumbDownTwoTone, ThumbUpTwoTone } from "@mui/icons-material";
+import { Backspace, FileDownload, ThumbDownTwoTone, ThumbUpTwoTone } from "@mui/icons-material";
 import { Loading } from "@/components/Loading.tsx";
 import { GridList } from "@/components/GridList.tsx";
 import { GridItem } from "@/components/GridItem.tsx";
@@ -29,12 +29,18 @@ export const DetailPage = () => {
 
     const askQuality = useCallback(async () => {
         await NiceModal.show(QualityDialogModal, {
-            details: data?.videoDetails
+            info: data
         })
     }, [data])
+
+    const navigate = useNavigate()
     return <Screen>
 
         <Stack height="100%" rowGap={3}>
+            <ListItem secondaryAction={<IconButton onClick={
+                () => navigate(-1)
+            }><Backspace/></IconButton>}>
+            </ListItem>
             {isFetching ? <Loading/> :
                 <Stack>
                     <Card sx={({breakpoints}) => ({[breakpoints.down('md')]: {height: "100%"}, height: '100%'})}
@@ -46,6 +52,12 @@ export const DetailPage = () => {
                                 controls
                                 width='100%'
                                 height='700px'
+                                style={{ borderRadius: "20px", backgroundColor: "black"}}
+                                config={{
+                                    youtube: {
+                                        playerVars: { showinfo: 1 }
+                                    }
+                                }}
                             />
                         </Stack>
                         <Stack>

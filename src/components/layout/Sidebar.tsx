@@ -1,5 +1,4 @@
 import {
-    Box,
     List,
     ListItem,
     ListItemButton,
@@ -17,14 +16,14 @@ export const drawerWidth = 280
 
 export function Sidebar() {
     return (
-        <Box>
+        <Stack height="100%">
             <Toolbar>
-                <Stack py={3} alignItems="center"  columnGap={2} flexDirection='row'>
+                <Stack py={3} alignItems="center" columnGap={2} flexDirection='row'>
                     <img style={{height: 40}} src={logo} alt="Logo"/>
                     <Typography variant='h4' color='primary' fontWeight={700}>Youtube DL</Typography>
                 </Stack>
             </Toolbar>
-            <Stack px="4px">
+            <Stack px="4px" height="100%" justifyContent="space-between">
                 <List
                     component={Stack}
                 >
@@ -67,7 +66,23 @@ export function Sidebar() {
                         </ListItemButton>
                     </ListItem>
                 </List>
+                <ListItem>
+                    <ListItemText
+                        primary="Youtube DL  V0.1.0"
+                        primaryTypographyProps={{
+                            textAlign: "center",
+                            variant: "body2",
+                            fontWeight: 700
+                        }}
+                        secondary="Tsiresy Milà"
+                        secondaryTypographyProps={{
+                            textAlign: "center",
+                            variant: "body2"
+                        }}
+                    />
+                </ListItem>
+
             </Stack>
-        </Box>
+        </Stack>
     )
 }

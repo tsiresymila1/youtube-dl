@@ -81,7 +81,10 @@ export const MuiCssBaseline: Components<Theme>['MuiCssBaseline'] = {
           min-height:100%;
           height:100%;
           font-family:'Public Sans', sans-serif;
-          font-size: 14px
+          font-size: 14px;
+          user-select: none;
+          -moz-user-select: none;
+          -webkit-user-select: none;
         }
       `,
 }

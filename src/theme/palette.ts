@@ -45,7 +45,7 @@ export const palette: Partial<Theme['palette']> = {
     light: 'rgb(142,9,47)',
     main: 'rgb(142,9,47)',
     dark: 'rgb(142,9,47)',
-    contrastText: 'FFE2EA',
+    contrastText: '#FFE2EA',
   },
   neutral: {
     main: greyScale.A100,
@@ -65,5 +65,34 @@ export const palette: Partial<Theme['palette']> = {
     primary: 'rgb(51,51,51)',
     secondary: 'rgb(57,62,67)',
     disabled: 'rgba(239,241,241,0.55)',
+  },
+}
+
+export const paletteDark: Partial<Theme['palette']> = {
+  mode: 'dark',
+  primary: {
+    light: 'rgb(142,9,47)',
+    main: 'rgb(142,9,47)',
+    dark: 'rgb(142,9,47)',
+    contrastText: '#FFE2EA',
+  },
+  neutral: {
+    main: greyScale.A100,
+    light: greyScale[100],
+    dark: greyScale.A200,
+    contrastText: greyScale[900],
+  },
+  background: {
+    default: 'rgb(17,17,17)',
+    paper: 'rgb(21,21,21)',
+  },
+  bg: 'rgb(255,255,255)',
+  bg2: 'rgb(253,255,253)',
+  menu: 'rgb(206,205,205)',
+  grey: greyScale,
+  text: {
+    primary: 'rgb(204,204,204)',
+    secondary: 'rgb(198,193,188)',
+    disabled: 'rgba(16,14,14,0.45)',
   },
 }

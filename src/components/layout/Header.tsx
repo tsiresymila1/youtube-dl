@@ -1,18 +1,22 @@
 import { AppBar, Badge, IconButton, InputAdornment, Stack, TextField, Toolbar } from '@mui/material'
 
-import {FolderTwoTone, Menu as MenuIcon, Search } from '@mui/icons-material'
+import { LightMode, LinkOutlined, Menu as MenuIcon, Search } from '@mui/icons-material'
 import { useDrawerContext } from '@/components/layout/DrawerProvider'
 import { drawerWidth } from './Sidebar'
 import { useSearchStore } from "@/store/search.ts";
 import { debounce } from "lodash-es";
 import { useCallback } from "react";
-import { dialog } from "@tauri-apps/api";
-import { tauriStore } from "@/store/tauri.ts";
-import { StorageKey } from "@/types.ts";
+import { useColorMode } from "@/theme/ColorMode.tsx";
+import NiceModal from "@ebay/nice-modal-react";
+import { DownloadLinkDialogModal } from "@/components/modal/DownloadLinkModal.tsx";
+// import { dialog } from "@tauri-apps/api";
+// import { tauriStore } from "@/store/tauri.ts";
+// import { StorageKey } from "@/types.ts";
 
 export function AppHeader() {
     const {toggleDrawer, isMobile} = useDrawerContext()
     const {search} = useSearchStore()
+    const {toggleColorMode} = useColorMode()
 
     const debouncedSearch = useCallback(
         debounce((value) => {
@@ -20,17 +24,9 @@ export function AppHeader() {
         }, 500), // 500ms debounce delay
         [] // Empty dependency array ensures debounce function is created only once
     );
-    const setDownloadDirectory = useCallback(() => {
-        dialog.open({
-            title: "Choose folder to save download",
-            directory: true,
-            multiple: false
-        }).then(async (dir) => {
-            if(dir){
-                await tauriStore.set(StorageKey.DOWNLOAD_DIRECTORY, dir)
-            }
-        })
-    },[])
+   const downloadLink = useCallback(async () => {
+       await NiceModal.show(DownloadLinkDialogModal,{})
+   },[])
     return (
         <AppBar
             position="fixed"
@@ -93,9 +89,14 @@ export function AppHeader() {
                         />
                     </Stack>
                     <Stack direction="row" gap={3} alignItems="center">
-                        <IconButton onClick={setDownloadDirectory}>
+                        <IconButton onClick={downloadLink}>
                             <Badge badgeContent={0} color="primary">
-                                <FolderTwoTone color="action"/>
+                                <LinkOutlined color="action"/>
+                            </Badge>
+                        </IconButton>
+                        <IconButton onClick={toggleColorMode}>
+                            <Badge badgeContent={0} color="primary">
+                                <LightMode color="action"/>
                             </Badge>
                         </IconButton>
                     </Stack>

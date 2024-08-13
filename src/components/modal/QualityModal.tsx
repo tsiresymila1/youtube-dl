@@ -12,33 +12,44 @@ import {
 import NiceModal, { useModal } from "@ebay/nice-modal-react";
 import { useHistoryStore } from "@/store/history.ts";
 import { useCallback, useState } from "react";
-import { downloadVideo } from "@/api/command.ts";
-import { VideoDetails } from "@/types.ts";
+import { checkDownload, downloadVideo } from "@/api/command.ts";
+import { Format, VideoInfo } from "@/types.ts";
 import { useNavigate } from "react-router";
+import { toast } from "react-hot-toast";
 
 export type CategoryModalProps = DialogProps & {
-    details: VideoDetails
+    info: VideoInfo
 }
 
-export enum VideoQuality {
-    Highest = 'Highest',
-    Lowest = 'Lowest',
-    Highest_Audio = "Highest Audio",
-    Lowest_Audio = "Lowest Audio",
-    Highest_Video = "Highest Video",
-    Lowest_Video = "Lowest Video"
-}
 
-const QualityModal = ({details, ...props}: CategoryModalProps) => {
+const QualityModal = ({info, ...props}: CategoryModalProps) => {
     const navigate = useNavigate()
-    const [quality, setQuality] = useState<VideoQuality>(VideoQuality.Highest)
+    const [format, setFormat] = useState<Format | undefined>([...info.formats].shift())
     const {addVideo} = useHistoryStore()
     const startVideo = useCallback(async () => {
-        addVideo(details)
-        await downloadVideo(details.videoId, quality, details.title)
-        props.onClose?.({}, "backdropClick")
-        navigate("/history")
-    }, [details, quality])
+        const toastId = toast.loading(`Start downloading "${info.videoDetails.title}"`, {
+            position: "bottom-right"
+        })
+        try {
+            const canDownload = await checkDownload()
+            if (canDownload) {
+                console.log(format)
+                addVideo(info.videoDetails, format!.itag)
+                props.onClose?.({}, "backdropClick")
+                navigate("/history")
+                const extension = format!.mimeType.split(";").shift()?.split('/').pop() ?? 'mp4'
+                await downloadVideo(info.videoDetails.videoId, format!.itag, `${info.videoDetails.title}.${extension}`)
+                toast.dismiss(toastId)
+            } else {
+                toast.dismiss(toastId)
+                toast.error("FFMPEG not installed. Please install it.");
+            }
+        } catch (e) {
+            toast.dismiss(toastId)
+            toast.error("Error when downloading video.");
+        }
+
+    }, [info, format])
 
     return (
         <Dialog
@@ -48,17 +59,17 @@ const QualityModal = ({details, ...props}: CategoryModalProps) => {
             scroll="paper"
         >
             <DialogTitle id="scroll-dialog-title">
-                Quality
+                Format
             </DialogTitle>
             <DialogContent dividers>
                 <ToggleButtonGroup
-                    value={quality}
+                    value={format}
                     exclusive
-                    onChange={(_, v) => setQuality(v)}
+                    onChange={(_, v) => setFormat(v)}
                 >
-                    {Object.values(VideoQuality).map(e => {
+                    {info.formats.filter(e => e.hasVideo).map(e => {
                         return <ToggleButton value={e} aria-label="left aligned">
-                            {e}
+                            {e.qualityLabel} {e.mimeType.split(";").shift()}
                         </ToggleButton>
                     })}
                 </ToggleButtonGroup>
@@ -67,10 +78,10 @@ const QualityModal = ({details, ...props}: CategoryModalProps) => {
                 <Stack display="flex" direction="row" justifyContent="end" columnGap={1}>
                     <Button onClick={e => {
                         props.onClose?.(e, "escapeKeyDown")
-                    }} variant="contained" color="warning">
+                    }} variant="contained" color="error">
                         Cancel
                     </Button>
-                    <Button onClick={startVideo} variant="contained" color="info">
+                    <Button disabled={!format} onClick={startVideo} variant="contained" color="info">
                         Ok
                     </Button>
                 </Stack>

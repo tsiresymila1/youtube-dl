@@ -2,7 +2,7 @@ import { useSearchStore } from "@/store/search.ts";
 import { useQuery } from "react-query";
 import { searchYoutube } from "@/api/command.ts";
 import { Screen } from "@/components/Screen.tsx";
-import { Stack } from "@mui/material";
+import { Stack, Typography } from "@mui/material";
 import { MovieItem } from "@/components/MovieItem";
 import { Loading } from "@/components/Loading.tsx";
 import { GridList } from "@/components/GridList.tsx";
@@ -16,7 +16,11 @@ export const HomePage = () => {
         queryFn: async () => {
             return await searchYoutube(keyword)
         },
-        enabled: keyword != ""
+        enabled: keyword != "",
+        keepPreviousData: true,
+        refetchIntervalInBackground: true,
+        refetchOnWindowFocus: false,
+        refetchOnMount: true
     })
     return <Screen>
         <Stack height="100%" rowGap={5}>
@@ -29,6 +33,10 @@ export const HomePage = () => {
                             <MovieItem key={`movie-${movie.Video.id}`} movie={movie}/>
                         </GridItem>)
                 })}
+                {(data ?? []).length === 0 ?
+                    <Stack height="100%" width="100%" id="test" justifyContent="center" alignItems="center">
+                        <Typography variant="h3" fontWeight={900}>Tap to search</Typography>
+                    </Stack> : null}
             </GridList>
             }
 
