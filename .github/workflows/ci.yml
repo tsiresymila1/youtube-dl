@@ -56,7 +56,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tagName: youtube-dl--v__VERSION__
-          releaseName: 'Youtuve DL v__VERSION__'
+          releaseName: 'Youtube DL v__VERSION__'
           releaseBody: 'See the assets to download and install this version'
           releaseDraft: false
           prerelease: false
