@@ -1,4 +1,4 @@
-use rusty_ytdl::{ VideoError};
+use rusty_ytdl::VideoError;
 use serde::Serialize;
 
 #[derive(Debug, Serialize)]
@@ -23,8 +23,8 @@ pub enum SerializableVideoError {
     ChildProcessError(String),
     LiveStreamNotSupported,
     CookieError,
-    FFmpeg(String),
-    VideoPlayerResponseError(String)
+    // FFmpeg(String),
+    VideoPlayerResponseError(String),
 }
 
 impl From<VideoError> for SerializableVideoError {
@@ -51,8 +51,6 @@ impl From<VideoError> for SerializableVideoError {
             VideoError::LiveStreamNotSupported => SerializableVideoError::LiveStreamNotSupported,
             VideoError::CookieError => SerializableVideoError::CookieError,
             VideoError::VideoPlayerResponseError(err) => SerializableVideoError::VideoPlayerResponseError(err),
-            // #[cfg(feature = "ffmpeg")]
-            VideoError::FFmpeg(err) => SerializableVideoError::FFmpeg(err),
         }
     }
 }

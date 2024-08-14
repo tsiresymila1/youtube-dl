@@ -1,3 +1,4 @@
+// use std::process::Command;
 use std::time::Duration;
 
 use reqwest_middleware::{ClientBuilder, reqwest};
@@ -90,7 +91,18 @@ pub async fn stream_with_format(format: VideoFormat) -> Result<Box<dyn Stream + 
         dl_chunk_size: DEFAULT_DL_CHUNK_SIZE,
         start,
         end,
-        ffmpeg_args: None,
     })?;
     Ok(Box::new(stream))
+}
+
+pub fn get_ffmpeg_command() -> Result<String, String> {
+    #[cfg(target_os = "windows")]
+    {
+        return Ok("ffmpeg.exe".to_string());
+    }
+
+    #[cfg(any(target_os = "macos", target_os = "linux"))]
+    {
+        return Ok("ffmpeg".to_string());
+    }
 }

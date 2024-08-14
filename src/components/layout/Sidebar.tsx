@@ -1,14 +1,5 @@
-import {
-    List,
-    ListItem,
-    ListItemButton,
-    ListItemIcon,
-    ListItemText,
-    Stack,
-    Toolbar,
-    Typography
-} from '@mui/material'
-import { DashboardTwoTone, History } from '@mui/icons-material'
+import { List, ListItem, ListItemButton, ListItemIcon, ListItemText, Stack, Toolbar, Typography } from '@mui/material'
+import { DashboardTwoTone, DownloadingTwoTone } from '@mui/icons-material'
 import { CustomNavLink } from '@/components/CustomNavLink'
 import logo from '../../assets/youtube.png'
 
@@ -57,11 +48,11 @@ export function Sidebar() {
                             activeclass="Mui-selected"
                         >
                             <ListItemIcon sx={() => ({m: '4px', minWidth: 36})}>
-                                <History/>
+                                <DownloadingTwoTone/>
                             </ListItemIcon>
                             <ListItemText
                                 primaryTypographyProps={{variant: 'body2'}}
-                                primary="History"
+                                primary="Downloads"
                             />
                         </ListItemButton>
                     </ListItem>

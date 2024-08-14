@@ -11,18 +11,21 @@ edition = "2021"
 tauri-build = { version = "1", features = [] }
 
 [dependencies]
-tauri = { version = "1", features = [ "dialog-ask", "dialog-save", "dialog-open", "shell-open"] }
+tauri = { version = "1", features = [ "shell-sidecar", "dialog-ask", "dialog-save", "dialog-open", "shell-open"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-rusty_ytdl = { version = "0.7.3", features = ["ffmpeg", "blocking", "live"] }
+rusty_ytdl = { version = "0.7.3", features = ["blocking", "live"] }
 tokio = { version = "1.39.2", features = ["rt", "rt-multi-thread", "macros"] }
 tauri-plugin-store = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v1" }
-futures = "0.3.30"
 retry-policies = "0.4.0"
 reqwest-retry = "0.6.1"
 reqwest-middleware = "0.3.3"
+
+[target.'cfg(target_os = "linux")'.dependencies]
+fork = "0.2.0"
 
 
 [features]
 # This feature is used for production builds or when a dev server is not specified, DO NOT REMOVE!!
 custom-protocol = ["tauri/custom-protocol"]
+dailog = ["tauri/dialog"]

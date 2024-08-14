@@ -1,21 +1,27 @@
 use std::fs;
-use std::fs::File;
+use std::fs::{File};
+#[cfg(target_os = "linux")]
+use std::{fs::metadata};
+#[cfg(target_os = "linux")]
+use fork::{daemon, Fork};
 use std::io::Write;
 use std::path::{Path, PathBuf};
-use std::process::Command;
+// use std::process::Command;
 use std::string::ToString;
 
 use rusty_ytdl::{DownloadOptions, Video, VideoError, VideoFormat, VideoInfo, VideoOptions, VideoQuality, VideoSearchOptions};
 use tauri::{AppHandle, command, Manager, Wry};
 use tauri::api::dialog::blocking::FileDialogBuilder;
+use tauri::api::process::Command;
 use tauri_plugin_store::{StoreCollection, with_store};
 
 use crate::AppState;
-use crate::command::r#struct::stream_with_format;
+use crate::command::r#struct::{get_ffmpeg_command, stream_with_format};
 use crate::serialize::error_serialize::SerializableVideoError;
 use crate::serialize::search::SerializableSearchResult;
 
 const APP_EVENT_NAME: &str = "app_event";
+const APP_EVENT_MERGING: &str = "merging_state";
 
 #[derive(Clone, serde::Serialize)]
 struct ProgressPayload {
@@ -107,8 +113,10 @@ async fn download_audio(id: String, download_dir: String, filename: String) -> R
     };
     let video = Video::new_with_options(&id, video_options).unwrap();
     let path = Path::new(&download_dir).join(format!("{id}_Audio_{filename}"));
-    video.download(path).await
+    let res = video.download(path.clone()).await;
+    println!("Audio downloaded at :: {:?} {}",path.clone(),path.exists());
 
+    res
 }
 
 async fn download_video_format(app: AppHandle, download_event_name: String, id: String, format: VideoFormat, download_dir: String, filename: String) -> Result<(), VideoError> {
@@ -118,7 +126,7 @@ async fn download_video_format(app: AppHandle, download_event_name: String, id: 
     let mut total_downloaded = 0;
     let id = id.clone();
     let path = Path::new(&download_dir).join(format!("{id}_Video_{filename}"));
-    let mut file = File::create(path).map_err(|e| VideoError::DownloadError(e.to_string())).unwrap();
+    let mut file = File::create(path.clone()).map_err(|e| VideoError::DownloadError(e.to_string())).unwrap();
     while let Some(chunk) = stream.chunk().await.unwrap() {
         total_downloaded += chunk.len();
         let percentage = (total_downloaded as f64 / total.clone() as f64) * 100.0;
@@ -133,6 +141,7 @@ async fn download_video_format(app: AppHandle, download_event_name: String, id: 
         ).unwrap();
         file.write_all(&chunk).unwrap()
     }
+    println!("Video downloaded at :: {:?} {}",path.clone(),path.exists());
     Ok(())
 }
 
@@ -141,7 +150,7 @@ pub async fn merge_video_audio(app: AppHandle, id: String, download_dir: String,
     let audio_path = Path::new(&download_dir).join(format!("{id}_Audio_{filename}"));
     let output_path = Path::new(&download_dir).join(filename);
     if video_path.exists() && audio_path.exists() {
-        let status = Command::new("ffmpeg")
+        let status = Command::new_sidecar("ffmpeg").unwrap()
             .args(&[
                 "-i", video_path.to_string_lossy().to_string().as_str(),
                 "-i", audio_path.to_string_lossy().to_string().as_str(),
@@ -165,8 +174,9 @@ pub async fn merge_video_audio(app: AppHandle, id: String, download_dir: String,
                         },
                     ).unwrap();
                 }
-            },
+            }
             Err(e) => {
+                println!("Error {}",e.to_string());
                 app.emit_all(
                     APP_EVENT_NAME,
                     AppEventPayload {
@@ -176,10 +186,11 @@ pub async fn merge_video_audio(app: AppHandle, id: String, download_dir: String,
                 ).unwrap();
             }
         }
-        fs::remove_file(video_path).unwrap();
-        fs::remove_file(audio_path).unwrap();
+        println!("Removing split video and audio ...")
+        //fs::remove_file(video_path).unwrap();
+        // fs::remove_file(audio_path).unwrap();
     } else {
-        println!("Video or Audio file not found ");
+        println!("Video or Audio file not found");
         app.emit_all(
             APP_EVENT_NAME,
             AppEventPayload {
@@ -192,19 +203,11 @@ pub async fn merge_video_audio(app: AppHandle, id: String, download_dir: String,
 
 #[command]
 pub fn check_ffmpeg_installed() -> bool {
-    let output = Command::new("ffmpeg")
-        .arg("-version")
-        .output();
-
-    return match output {
-        Ok(output) => {
-            if output.status.success() {
-                true
-            } else {
-                false
-            }
+    return match get_ffmpeg_command() {
+        Ok(_) => {
+            true
         }
-        Err(_e) => {
+        Err(_) => {
             false
         }
     };
@@ -251,7 +254,7 @@ pub async fn download_video(id: String, format: u64, filename: String, app: AppH
     println!("download_dir: {}", download_dir);
     let download_event_name = format!("download_progress_{}", id.clone());
     println!("Starting  download!");
-    let (result1, _) = tokio::join!(download_audio(
+    let res = tokio::join!(download_audio(
             id.clone(),
             download_dir.clone(),
             filename.clone(),
@@ -265,23 +268,28 @@ pub async fn download_video(id: String, format: u64, filename: String, app: AppH
             filename.clone(),
         )
     );
-    match result1 {
-        Ok(_) => {
+    match res {
+        (Ok(_), Ok(_)) => {
+            app.emit_all(
+                &download_event_name,
+                ProgressPayload {
+                    id: id.clone(),
+                    progress: 100u64,
+                    storage: Path::new(&download_dir.clone()).join(filename.clone()).to_string_lossy().to_string(),
+                },
+            ).unwrap();
+            println!("Merging ...");
             merge_video_audio(
                 app.clone(),
                 id.clone(),
                 download_dir.clone(),
                 filename.clone(),
             ).await;
-            app.emit_all(
-                &download_event_name,
-                ProgressPayload {
-                    id,
-                    progress: 100u64,
-                    storage: Path::new(&download_dir.clone()).join(filename.clone()).to_string_lossy().to_string(),
-                },
-            ).unwrap();
             println!("Video merged");
+            app.emit_all(
+                &format!("{}_{}", APP_EVENT_MERGING,id.clone()),
+                id.clone(),
+            ).unwrap();
             app.emit_all(
                 APP_EVENT_NAME,
                 AppEventPayload {
@@ -289,14 +297,13 @@ pub async fn download_video(id: String, format: u64, filename: String, app: AppH
                     message: format!("{} downloaded", filename.clone()),
                 },
             ).unwrap();
-
-        },
-        Err(_) => {
+        }
+        _ => {
             app.emit_all(
                 APP_EVENT_NAME,
                 AppEventPayload {
                     event: format!("{}", "error"),
-                    message: "Failed to download".to_string()
+                    message: "Failed to download".to_string(),
                 },
             ).unwrap();
         }

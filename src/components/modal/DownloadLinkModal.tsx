@@ -20,18 +20,23 @@ export type DownloadLinkModalProps = DialogProps
 
 
 const DownloadLinkModal = ({...props}: DownloadLinkModalProps) => {
-
+    const [loading, setLoading]= useState<boolean>(false)
     const [link, setLink] = useState<String>("")
     const startVideo = useCallback(async () => {
-        const toastId = toast.loading("Getting video info ...",{
-            position: "bottom-right"
-        })
-        const info = await getVideoInfo(link)
-        toast.dismiss(toastId)
-        props.onClose?.({}, "escapeKeyDown")
-        await NiceModal.show(QualityDialogModal, {
-            info
-        })
+        setLoading(true)
+        try{
+            const toastId = toast.loading("Getting video info ...",{
+                position: "bottom-right"
+            })
+            const info = await getVideoInfo(link)
+            toast.dismiss(toastId)
+            props.onClose?.({}, "escapeKeyDown")
+            await NiceModal.show(QualityDialogModal, {
+                info
+            })
+        }finally {
+            setLoading(false)
+        }
     }, [link])
 
     return (
@@ -81,7 +86,7 @@ const DownloadLinkModal = ({...props}: DownloadLinkModalProps) => {
                     }} variant="contained" color="error">
                         Cancel
                     </Button>
-                    <Button disabled={link.trim().length === 0} onClick={startVideo} variant="contained" color="success">
+                    <Button disabled={link.trim().length === 0 || loading} onClick={startVideo} variant="contained" color="success">
                         Download
                     </Button>
                 </Stack>

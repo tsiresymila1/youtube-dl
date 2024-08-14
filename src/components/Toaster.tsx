@@ -16,7 +16,7 @@ export const ToasterApp = () => {
     }, [])
     return <Toaster>
         {(t) => (
-            <ToastBar position="bottom-right" toast={t}>
+            <ToastBar style={{ backgroundColor: "transparent"}} position="bottom-right" toast={t}>
                 {({icon, message}) => (
                     <Alert
                         icon={icon}

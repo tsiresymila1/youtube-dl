@@ -27,11 +27,13 @@ export const HistoryItem = ({history}: HistoryProps) => {
             storage: string
         }>(`download_progress_${history.video.videoId}`, (event) => {
             if (event.payload.progress >= 100) {
-                updateHistory(event.payload.id, "storage", event.payload.storage)
-            }else{
                 updateHistory(event.payload.id, "merging", true)
+                updateHistory(event.payload.id, "storage", event.payload.storage)
             }
             updateHistory(event.payload.id, "progress", event.payload.progress)
+        }).then(() => null)
+        listen<string>(`merging_state_${history.video.videoId}`, (_) => {
+            updateHistory(history.video.videoId, "merging", false)
         }).then(() => null)
     }, [])
     return <CardActionArea>
@@ -43,17 +45,22 @@ export const HistoryItem = ({history}: HistoryProps) => {
                     </Typography>
                 </CardContent>
                 <CardActions>
-                    {history.progress < 100 ?
+                    {history.progress < 100 || history.merging ?
                         <Stack width="100%">
                             <LinearProgress
                                 variant={
-                                    history.progress === 0 ? "indeterminate" : "determinate"
+                                    history.progress === 0 || history.merging ? "indeterminate" : "determinate"
                                 }
                                 value={history.progress}
                             />
-                            <Typography variant="body1">
-                                {history.progress} %
-                            </Typography>
+
+                            {history.merging ?
+                                <Typography variant="body1">
+                                    Merging ....
+                                </Typography> :
+                                <Typography variant="body1">
+                                    {history.progress} %
+                                </Typography>}
                         </Stack> :
                         <Stack
                             direction="row"

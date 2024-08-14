@@ -24,10 +24,11 @@ export type CategoryModalProps = DialogProps & {
 
 const QualityModal = ({info, ...props}: CategoryModalProps) => {
     const navigate = useNavigate()
+    const [loading, setLoading] = useState<boolean>(false)
     const [format, setFormat] = useState<Format | undefined>([...info.formats].shift())
     const {addVideo} = useHistoryStore()
     const startVideo = useCallback(async () => {
-
+        setLoading(true)
         try {
             const canDownload = await checkDownload()
             if (canDownload) {
@@ -36,19 +37,21 @@ const QualityModal = ({info, ...props}: CategoryModalProps) => {
                 props.onClose?.({}, "backdropClick")
                 navigate("/history")
                 const extension = format!.mimeType.split(";").shift()?.split('/').pop() ?? 'mp4'
-                const promise =  downloadVideo(info.videoDetails.videoId, format!.itag, `${info.videoDetails.title}.${extension}`)
+                const promise = downloadVideo(info.videoDetails.videoId, format!.itag, `${info.videoDetails.title}.${extension}`)
                 await toast.promise(promise, {
                     loading: `Downloading "${info.videoDetails.title}"`,
-                    error:  `Error downloading "${info.videoDetails.title}"`,
+                    error: `Error downloading "${info.videoDetails.title}"`,
                     success: "Download success"
-                },{
+                }, {
                     position: "bottom-right"
                 })
             } else {
-                toast.error("FFMPEG not installed. Please install it." ,{position: "bottom-right"});
+                toast.error("FFMPEG not installed. Please install it.", {position: "bottom-right"});
             }
         } catch (e) {
-            toast.error("Error when downloading video.",{position: "bottom-right"});
+            toast.error("Error when downloading video.", {position: "bottom-right"});
+        } finally {
+            setLoading(false)
         }
 
     }, [info, format])
@@ -83,7 +86,8 @@ const QualityModal = ({info, ...props}: CategoryModalProps) => {
                     }} variant="contained" color="error">
                         Cancel
                     </Button>
-                    <Button disabled={!format} sx={{ color: "white"}} onClick={startVideo} variant="contained" color="success">
+                    <Button disabled={!format || loading} sx={{color: "white"}} onClick={startVideo} variant="contained"
+                            color="success">
                         Start
                     </Button>
                 </Stack>
