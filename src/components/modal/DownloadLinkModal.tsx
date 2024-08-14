@@ -23,7 +23,9 @@ const DownloadLinkModal = ({...props}: DownloadLinkModalProps) => {
 
     const [link, setLink] = useState<String>("")
     const startVideo = useCallback(async () => {
-        const toastId = toast.loading("Getting video info ...")
+        const toastId = toast.loading("Getting video info ...",{
+            position: "bottom-right"
+        })
         const info = await getVideoInfo(link)
         toast.dismiss(toastId)
         props.onClose?.({}, "escapeKeyDown")

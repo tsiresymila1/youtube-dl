@@ -1,14 +1,14 @@
 import { AppBar, Badge, IconButton, InputAdornment, Stack, TextField, Toolbar } from '@mui/material'
 
-import { LightMode, LinkOutlined, Menu as MenuIcon, Search } from '@mui/icons-material'
+import { DarkMode, LightMode, LinkOutlined, Menu as MenuIcon, Search } from '@mui/icons-material'
 import { useDrawerContext } from '@/components/layout/DrawerProvider'
 import { drawerWidth } from './Sidebar'
 import { useSearchStore } from "@/store/search.ts";
 import { debounce } from "lodash-es";
 import { useCallback } from "react";
-import { useColorMode } from "@/theme/ColorMode.tsx";
 import NiceModal from "@ebay/nice-modal-react";
 import { DownloadLinkDialogModal } from "@/components/modal/DownloadLinkModal.tsx";
+import { useModeStore } from "@/store/mode.ts";
 // import { dialog } from "@tauri-apps/api";
 // import { tauriStore } from "@/store/tauri.ts";
 // import { StorageKey } from "@/types.ts";
@@ -16,7 +16,7 @@ import { DownloadLinkDialogModal } from "@/components/modal/DownloadLinkModal.ts
 export function AppHeader() {
     const {toggleDrawer, isMobile} = useDrawerContext()
     const {search} = useSearchStore()
-    const {toggleColorMode} = useColorMode()
+    const {mode, toggleMode} = useModeStore()
 
     const debouncedSearch = useCallback(
         debounce((value) => {
@@ -24,9 +24,9 @@ export function AppHeader() {
         }, 500), // 500ms debounce delay
         [] // Empty dependency array ensures debounce function is created only once
     );
-   const downloadLink = useCallback(async () => {
-       await NiceModal.show(DownloadLinkDialogModal,{})
-   },[])
+    const downloadLink = useCallback(async () => {
+        await NiceModal.show(DownloadLinkDialogModal, {})
+    }, [])
     return (
         <AppBar
             position="fixed"
@@ -94,9 +94,9 @@ export function AppHeader() {
                                 <LinkOutlined color="action"/>
                             </Badge>
                         </IconButton>
-                        <IconButton onClick={toggleColorMode}>
+                        <IconButton onClick={toggleMode}>
                             <Badge badgeContent={0} color="primary">
-                                <LightMode color="action"/>
+                                {mode === "light" ? <LightMode color="action"/> : <DarkMode color="action"/>}
                             </Badge>
                         </IconButton>
                     </Stack>

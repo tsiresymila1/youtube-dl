@@ -27,9 +27,7 @@ const QualityModal = ({info, ...props}: CategoryModalProps) => {
     const [format, setFormat] = useState<Format | undefined>([...info.formats].shift())
     const {addVideo} = useHistoryStore()
     const startVideo = useCallback(async () => {
-        const toastId = toast.loading(`Start downloading "${info.videoDetails.title}"`, {
-            position: "bottom-right"
-        })
+
         try {
             const canDownload = await checkDownload()
             if (canDownload) {
@@ -38,15 +36,19 @@ const QualityModal = ({info, ...props}: CategoryModalProps) => {
                 props.onClose?.({}, "backdropClick")
                 navigate("/history")
                 const extension = format!.mimeType.split(";").shift()?.split('/').pop() ?? 'mp4'
-                await downloadVideo(info.videoDetails.videoId, format!.itag, `${info.videoDetails.title}.${extension}`)
-                toast.dismiss(toastId)
+                const promise =  downloadVideo(info.videoDetails.videoId, format!.itag, `${info.videoDetails.title}.${extension}`)
+                await toast.promise(promise, {
+                    loading: `Downloading "${info.videoDetails.title}"`,
+                    error:  `Error downloading "${info.videoDetails.title}"`,
+                    success: "Download success"
+                },{
+                    position: "bottom-right"
+                })
             } else {
-                toast.dismiss(toastId)
-                toast.error("FFMPEG not installed. Please install it.");
+                toast.error("FFMPEG not installed. Please install it." ,{position: "bottom-right"});
             }
         } catch (e) {
-            toast.dismiss(toastId)
-            toast.error("Error when downloading video.");
+            toast.error("Error when downloading video.",{position: "bottom-right"});
         }
 
     }, [info, format])
@@ -81,8 +83,8 @@ const QualityModal = ({info, ...props}: CategoryModalProps) => {
                     }} variant="contained" color="error">
                         Cancel
                     </Button>
-                    <Button disabled={!format} onClick={startVideo} variant="contained" color="info">
-                        Ok
+                    <Button disabled={!format} sx={{ color: "white"}} onClick={startVideo} variant="contained" color="success">
+                        Start
                     </Button>
                 </Stack>
             </DialogActions>

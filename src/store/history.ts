@@ -42,7 +42,7 @@ export const useHistoryStore = create(
         }),
         {
             name: 'history-storage',
-            storage: createJSONStorage(() => sessionStorage)
+            storage: createJSONStorage(() => localStorage)
         },
     )
 )

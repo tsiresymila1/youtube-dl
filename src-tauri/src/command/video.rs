@@ -96,7 +96,7 @@ pub fn show_in_folder(path: String) {
 }
 
 
-async fn download_audio(id: String, download_dir: String, filename: String) {
+async fn download_audio(id: String, download_dir: String, filename: String) -> Result<(), VideoError> {
     let video_options = VideoOptions {
         filter: VideoSearchOptions::Audio,
         quality: VideoQuality::HighestAudio,
@@ -107,10 +107,11 @@ async fn download_audio(id: String, download_dir: String, filename: String) {
     };
     let video = Video::new_with_options(&id, video_options).unwrap();
     let path = Path::new(&download_dir).join(format!("{id}_Audio_{filename}"));
-    video.download(path).await.unwrap();
+    video.download(path).await
+
 }
 
-async fn download_video_format(app: AppHandle, download_event_name: String, id: String, format: VideoFormat, download_dir: String, filename: String) {
+async fn download_video_format(app: AppHandle, download_event_name: String, id: String, format: VideoFormat, download_dir: String, filename: String) -> Result<(), VideoError> {
     let stream = stream_with_format(format).await.unwrap();
     let total = stream.content_length();
     println!("total size: {}", total);
@@ -132,6 +133,7 @@ async fn download_video_format(app: AppHandle, download_event_name: String, id: 
         ).unwrap();
         file.write_all(&chunk).unwrap()
     }
+    Ok(())
 }
 
 pub async fn merge_video_audio(app: AppHandle, id: String, download_dir: String, filename: String) {
@@ -139,7 +141,7 @@ pub async fn merge_video_audio(app: AppHandle, id: String, download_dir: String,
     let audio_path = Path::new(&download_dir).join(format!("{id}_Audio_{filename}"));
     let output_path = Path::new(&download_dir).join(filename);
     if video_path.exists() && audio_path.exists() {
-        Command::new("ffmpeg")
+        let status = Command::new("ffmpeg")
             .args(&[
                 "-i", video_path.to_string_lossy().to_string().as_str(),
                 "-i", audio_path.to_string_lossy().to_string().as_str(),
@@ -151,7 +153,29 @@ pub async fn merge_video_audio(app: AppHandle, id: String, download_dir: String,
                 "experimental",
                 "-shortest",
                 output_path.to_string_lossy().to_string().as_str(),
-            ]).status().unwrap();
+            ]).status();
+        match status {
+            Ok(e) => {
+                if !e.success() {
+                    app.emit_all(
+                        APP_EVENT_NAME,
+                        AppEventPayload {
+                            event: format!("{}", "error"),
+                            message: "Error when merging video or audio file.".to_string(),
+                        },
+                    ).unwrap();
+                }
+            },
+            Err(e) => {
+                app.emit_all(
+                    APP_EVENT_NAME,
+                    AppEventPayload {
+                        event: format!("{}", "error"),
+                        message: e.to_string(),
+                    },
+                ).unwrap();
+            }
+        }
         fs::remove_file(video_path).unwrap();
         fs::remove_file(audio_path).unwrap();
     } else {
@@ -227,7 +251,7 @@ pub async fn download_video(id: String, format: u64, filename: String, app: AppH
     println!("download_dir: {}", download_dir);
     let download_event_name = format!("download_progress_{}", id.clone());
     println!("Starting  download!");
-    tokio::join!(download_audio(
+    let (result1, _) = tokio::join!(download_audio(
             id.clone(),
             download_dir.clone(),
             filename.clone(),
@@ -241,28 +265,42 @@ pub async fn download_video(id: String, format: u64, filename: String, app: AppH
             filename.clone(),
         )
     );
-    merge_video_audio(
-        app.clone(),
-        id.clone(),
-        download_dir.clone(),
-        filename.clone(),
-    ).await;
-    app.emit_all(
-        &download_event_name,
-        ProgressPayload {
-            id,
-            progress: 100u64,
-            storage: Path::new(&download_dir.clone()).join(filename.clone()).to_string_lossy().to_string(),
+    match result1 {
+        Ok(_) => {
+            merge_video_audio(
+                app.clone(),
+                id.clone(),
+                download_dir.clone(),
+                filename.clone(),
+            ).await;
+            app.emit_all(
+                &download_event_name,
+                ProgressPayload {
+                    id,
+                    progress: 100u64,
+                    storage: Path::new(&download_dir.clone()).join(filename.clone()).to_string_lossy().to_string(),
+                },
+            ).unwrap();
+            println!("Video merged");
+            app.emit_all(
+                APP_EVENT_NAME,
+                AppEventPayload {
+                    event: format!("{}", "success"),
+                    message: format!("{} downloaded", filename.clone()),
+                },
+            ).unwrap();
+
         },
-    ).unwrap();
-    println!("Video merged");
-    app.emit_all(
-        APP_EVENT_NAME,
-        AppEventPayload {
-            event: format!("{}", "success"),
-            message: format!("{} downloaded", filename.clone()),
-        },
-    ).unwrap();
+        Err(_) => {
+            app.emit_all(
+                APP_EVENT_NAME,
+                AppEventPayload {
+                    event: format!("{}", "error"),
+                    message: "Failed to download".to_string()
+                },
+            ).unwrap();
+        }
+    }
     Ok(download_dir)
 }
 
