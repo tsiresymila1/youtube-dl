@@ -5,9 +5,10 @@ import {
     DialogContent,
     DialogProps,
     DialogTitle,
+    FormControl,
+    MenuItem,
+    Select,
     Stack,
-    ToggleButton,
-    ToggleButtonGroup
 } from "@mui/material";
 import NiceModal, { useModal } from "@ebay/nice-modal-react";
 import { useHistoryStore } from "@/store/history.ts";
@@ -67,17 +68,33 @@ const QualityModal = ({info, ...props}: CategoryModalProps) => {
                 Format
             </DialogTitle>
             <DialogContent dividers>
-                <ToggleButtonGroup
-                    value={format}
-                    exclusive
-                    onChange={(_, v) => setFormat(v)}
-                >
-                    {info.formats.filter(e => e.hasVideo).map(e => {
-                        return <ToggleButton value={e} aria-label="left aligned">
-                            {e.qualityLabel} {e.mimeType.split(";").shift()}
-                        </ToggleButton>
-                    })}
-                </ToggleButtonGroup>
+                <FormControl fullWidth>
+                    <Select
+                        id="choose-format"
+                        value={format?.itag}
+                        onChange={(e) => {
+                            const value = e.target.value
+                            if (value && Number.isInteger(value)) {
+                                setFormat(info.formats.find(e => e.itag === value))
+                            }
+                        }}
+                    >
+                        {info.formats.filter(e => e.hasVideo).map(e => {
+                            return <MenuItem value={e.itag}>{e.qualityLabel} {e.mimeType.split(";").shift()}</MenuItem>
+                        })}
+                    </Select>
+                </FormControl>
+                {/*<ToggleButtonGroup*/}
+                {/*    value={format}*/}
+                {/*    exclusive*/}
+                {/*    onChange={(_, v) => setFormat(v)}*/}
+                {/*>*/}
+                {/*    {info.formats.filter(e => e.hasVideo).map(e => {*/}
+                {/*        return <ToggleButton value={e} aria-label="left aligned">*/}
+                {/*            {e.qualityLabel} {e.mimeType.split(";").shift()}*/}
+                {/*        </ToggleButton>*/}
+                {/*    })}*/}
+                {/*</ToggleButtonGroup>*/}
             </DialogContent>
             <DialogActions>
                 <Stack display="flex" direction="row" justifyContent="end" columnGap={1}>

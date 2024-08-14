@@ -11,7 +11,7 @@ import {
     Stack,
     Typography
 } from "@mui/material";
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { Check, Delete, Folder } from "@mui/icons-material";
 import { openInFolder } from "@/api/command.ts";
 
@@ -20,6 +20,14 @@ export type HistoryProps = {
 }
 export const HistoryItem = ({history}: HistoryProps) => {
     const {updateHistory, deleteHistory} = useHistoryStore()
+
+    const openFolder = useCallback(()=>{
+        if(history.storage !== ""){
+            openInFolder(history.storage).then()
+        }
+
+    },[history])
+
     useEffect(() => {
         listen<{
             id: string,
@@ -69,7 +77,7 @@ export const HistoryItem = ({history}: HistoryProps) => {
                             width="100%"
                         >
                             <Stack direction="row">
-                                <IconButton onClick={() => openInFolder(history.storage)}>
+                                <IconButton onClick={openFolder}>
                                     <Folder/>
                                 </IconButton>
                                 <IconButton onClick={() => deleteHistory(history.video.videoId)}>

@@ -1,9 +1,9 @@
 use std::fs;
 use std::fs::{File};
-#[cfg(target_os = "linux")]
-use std::{fs::metadata};
-#[cfg(target_os = "linux")]
-use fork::{daemon, Fork};
+// #[cfg(target_os = "linux")]
+// use std::{fs::metadata};
+// #[cfg(target_os = "linux")]
+// use fork::{daemon, Fork};
 use std::io::Write;
 use std::path::{Path, PathBuf};
 // use std::process::Command;
@@ -55,52 +55,6 @@ fn fetch_setting(app: &AppHandle, key: String) -> String {
     folder_path.to_string_lossy().to_string()
 }
 
-#[command]
-pub fn show_in_folder(path: String) {
-    #[cfg(target_os = "windows")]
-    {
-        Command::new("explorer")
-            .args(["/select,", &path]) // The comma after select is not a typo
-            .spawn()
-            .unwrap();
-    }
-
-    #[cfg(target_os = "linux")]
-    {
-        if path.contains(",") {
-            // see https://gitlab.freedesktop.org/dbus/dbus/-/issues/76
-            let new_path = match metadata(&path).unwrap().is_dir() {
-                true => path,
-                false => {
-                    let mut path2 = PathBuf::from(path);
-                    path2.pop();
-                    path2.into_os_string().into_string().unwrap()
-                }
-            };
-            Command::new("xdg-open")
-                .args([&new_path])
-                .spawn()
-                .unwrap();
-        } else {
-            if let Ok(Fork::Child) = daemon(false, false) {
-                Command::new("dbus-send")
-                    .args(["--session", "--dest=org.freedesktop.FileManager1", "--type=method_call",
-                        "/org/freedesktop/FileManager1", "org.freedesktop.FileManager1.ShowItems",
-                        format!("array:string:\"file://{path}\"").as_str(), "string:\"\""])
-                    .spawn()
-                    .unwrap();
-            }
-        }
-    }
-    #[cfg(target_os = "macos")]
-    {
-        Command::new("open")
-            .args(["-R", &path])
-            .spawn()
-            .unwrap();
-    }
-}
-
 
 async fn download_audio(id: String, download_dir: String, filename: String) -> Result<(), VideoError> {
     let video_options = VideoOptions {
@@ -114,7 +68,7 @@ async fn download_audio(id: String, download_dir: String, filename: String) -> R
     let video = Video::new_with_options(&id, video_options).unwrap();
     let path = Path::new(&download_dir).join(format!("{id}_Audio_{filename}"));
     let res = video.download(path.clone()).await;
-    println!("Audio downloaded at :: {:?} {}",path.clone(),path.exists());
+    println!("Audio downloaded at :: {:?} {}", path.clone(), path.exists());
 
     res
 }
@@ -141,7 +95,7 @@ async fn download_video_format(app: AppHandle, download_event_name: String, id: 
         ).unwrap();
         file.write_all(&chunk).unwrap()
     }
-    println!("Video downloaded at :: {:?} {}",path.clone(),path.exists());
+    println!("Video downloaded at :: {:?} {}", path.clone(), path.exists());
     Ok(())
 }
 
@@ -176,7 +130,7 @@ pub async fn merge_video_audio(app: AppHandle, id: String, download_dir: String,
                 }
             }
             Err(e) => {
-                println!("Error {}",e.to_string());
+                println!("Error {}", e.to_string());
                 app.emit_all(
                     APP_EVENT_NAME,
                     AppEventPayload {
@@ -211,6 +165,40 @@ pub fn check_ffmpeg_installed() -> bool {
             false
         }
     };
+}
+
+#[command]
+pub fn show_in_folder(path: String) {
+    #[cfg(target_os = "windows")]
+    {
+        Command::new("explorer")
+            .args(["/select,", &path]) // The comma after select is not a typo
+            .spawn()
+            .unwrap();
+    }
+
+    #[cfg(target_os = "linux")]
+    {
+        // let new_path = match metadata(&path).unwrap().is_dir() {
+        //     true => path,
+        //     false => {
+        //         let mut path2 = PathBuf::from(path);
+        //         path2.pop();
+        //         path2.into_os_string().into_string().unwrap()
+        //     }
+        // };
+        Command::new("xdg-open")
+            .args([&path])
+            .spawn()
+            .unwrap();
+    }
+    #[cfg(target_os = "macos")]
+    {
+        Command::new("open")
+            .args(["-R", &path])
+            .spawn()
+            .unwrap();
+    }
 }
 
 #[command]
@@ -287,7 +275,7 @@ pub async fn download_video(id: String, format: u64, filename: String, app: AppH
             ).await;
             println!("Video merged");
             app.emit_all(
-                &format!("{}_{}", APP_EVENT_MERGING,id.clone()),
+                &format!("{}_{}", APP_EVENT_MERGING, id.clone()),
                 id.clone(),
             ).unwrap();
             app.emit_all(
