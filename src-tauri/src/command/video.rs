@@ -186,7 +186,7 @@ pub async fn merge_video_audio(app: AppHandle, id: String, download_dir: String,
                 ).unwrap();
             }
         }
-        println!("Removing split video and audio ...")
+        println!("Removing split video and audio ...");
         fs::remove_file(video_path).unwrap();
         fs::remove_file(audio_path).unwrap();
     } else {
