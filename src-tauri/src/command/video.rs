@@ -78,7 +78,7 @@ pub fn show_in_folder(path: String) {
                 }
             };
             Command::new("xdg-open")
-                .args(&new_path)
+                .args([&new_path])
                 .spawn()
                 .unwrap();
         } else {
