@@ -26,15 +26,14 @@ export type CategoryModalProps = DialogProps & {
 const QualityModal = ({info, ...props}: CategoryModalProps) => {
     const navigate = useNavigate()
     const [loading, setLoading] = useState<boolean>(false)
-    const [format, setFormat] = useState<Format | undefined>([...info.formats].shift())
+    const [format, setFormat] = useState<Format>([...info.formats].shift()!)
     const {addVideo} = useHistoryStore()
     const startVideo = useCallback(async () => {
         setLoading(true)
         try {
             const canDownload = await checkDownload()
             if (canDownload) {
-                console.log(format)
-                addVideo(info.videoDetails, format!.itag)
+                addVideo(info.videoDetails, format!)
                 props.onClose?.({}, "backdropClick")
                 navigate("/history")
                 const extension = format!.mimeType.split(";").shift()?.split('/').pop() ?? 'mp4'
@@ -75,7 +74,7 @@ const QualityModal = ({info, ...props}: CategoryModalProps) => {
                         onChange={(e) => {
                             const value = e.target.value
                             if (value && Number.isInteger(value)) {
-                                setFormat(info.formats.find(e => e.itag === value))
+                                setFormat(info.formats.find(e => e.itag === value)!)
                             }
                         }}
                     >
@@ -84,17 +83,6 @@ const QualityModal = ({info, ...props}: CategoryModalProps) => {
                         })}
                     </Select>
                 </FormControl>
-                {/*<ToggleButtonGroup*/}
-                {/*    value={format}*/}
-                {/*    exclusive*/}
-                {/*    onChange={(_, v) => setFormat(v)}*/}
-                {/*>*/}
-                {/*    {info.formats.filter(e => e.hasVideo).map(e => {*/}
-                {/*        return <ToggleButton value={e} aria-label="left aligned">*/}
-                {/*            {e.qualityLabel} {e.mimeType.split(";").shift()}*/}
-                {/*        </ToggleButton>*/}
-                {/*    })}*/}
-                {/*</ToggleButtonGroup>*/}
             </DialogContent>
             <DialogActions>
                 <Stack display="flex" direction="row" justifyContent="end" columnGap={1}>

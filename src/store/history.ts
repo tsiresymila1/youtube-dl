@@ -1,20 +1,20 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from 'zustand/middleware'
 
-import { VideoDetails } from "@/types.ts";
+import { Format, VideoDetails } from "@/types.ts";
 
 export type VideoHistory = {
     video: VideoDetails,
     progress: number,
     storage: string,
-    format: number,
+    format: Format,
     merging?: boolean
     failed?: boolean
 }
 
 interface HistoryState {
     history: VideoHistory[]
-    addVideo: (video: VideoDetails, format: number) => void,
+    addVideo: (video: VideoDetails, format: Format) => void,
     updateHistory: (videoId: string, key: keyof VideoHistory, value: VideoHistory[keyof VideoHistory]) => void
     deleteHistory: (videoId: string) => void
 }

@@ -35,7 +35,6 @@ export const DetailPage = () => {
 
     const navigate = useNavigate()
     return <Screen>
-
         <Stack height="100%" rowGap={3}>
             <ListItem secondaryAction={<IconButton onClick={
                 () => navigate(-1)
@@ -115,7 +114,7 @@ export const DetailPage = () => {
                 </ListItem>
                 <GridList>
                     {data?.relatedVideos.map(r => {
-                        return <GridItem>
+                        return <GridItem key={r.id}>
                             <MovieItem showDetails={false} movie={{Video: r as unknown as Video}}/>
                         </GridItem>
                     })}

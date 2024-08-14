@@ -12,8 +12,9 @@ import {
     Typography
 } from "@mui/material";
 import { useCallback, useEffect } from "react";
-import { Check, Delete, Folder } from "@mui/icons-material";
-import { openInFolder } from "@/api/command.ts";
+import { Check, Delete, Folder, Refresh } from "@mui/icons-material";
+import { checkDownload, downloadVideo, openInFolder } from "@/api/command.ts";
+import { toast } from "react-hot-toast";
 
 export type HistoryProps = {
     history: VideoHistory
@@ -21,12 +22,34 @@ export type HistoryProps = {
 export const HistoryItem = ({history}: HistoryProps) => {
     const {updateHistory, deleteHistory} = useHistoryStore()
 
-    const openFolder = useCallback(()=>{
-        if(history.storage !== ""){
+    const openFolder = useCallback(() => {
+        if (history.storage !== "") {
             openInFolder(history.storage).then()
         }
 
-    },[history])
+    }, [history])
+
+    const restartVideo = useCallback(async () => {
+        try {
+            const canDownload = await checkDownload()
+            if (canDownload) {
+                const extension = history.format!.mimeType.split(";").shift()?.split('/').pop() ?? 'mp4'
+                const promise = downloadVideo(history.video.videoId, history.format!.itag, `${history.video.title}.${extension}`)
+                await toast.promise(promise, {
+                    loading: `Downloading "${history.video.title}"`,
+                    error: `Error downloading "${history.video.title}"`,
+                    success: "Download success"
+                }, {
+                    position: "bottom-right"
+                })
+            } else {
+                toast.error("FFMPEG not installed. Please install it.", {position: "bottom-right"});
+            }
+        } catch (e) {
+            toast.error("Error when downloading video.", {position: "bottom-right"});
+        }
+
+    }, [history])
 
     useEffect(() => {
         listen<{
@@ -61,7 +84,6 @@ export const HistoryItem = ({history}: HistoryProps) => {
                                 }
                                 value={history.progress}
                             />
-
                             {history.merging ?
                                 <Typography variant="body1">
                                     Merging ....
@@ -69,6 +91,15 @@ export const HistoryItem = ({history}: HistoryProps) => {
                                 <Typography variant="body1">
                                     {history.progress} %
                                 </Typography>}
+                            {!history.merging ?
+                                <Stack direction="row" justifyContent="space-between" rowGap={1}>
+                                    <IconButton onClick={restartVideo}>
+                                        <Refresh color="primary"/>
+                                    </IconButton>
+                                    <IconButton onClick={() => deleteHistory(history.video.videoId)}>
+                                        <Delete color="error"/>
+                                    </IconButton>
+                                </Stack> : null}
                         </Stack> :
                         <Stack
                             direction="row"

@@ -86,7 +86,7 @@ const DownloadLinkModal = ({...props}: DownloadLinkModalProps) => {
                     }} variant="contained" color="error">
                         Cancel
                     </Button>
-                    <Button disabled={link.trim().length === 0 || loading} onClick={startVideo} variant="contained" color="success">
+                    <Button sx={{ color: "white"}} disabled={link.trim().length === 0 || loading} onClick={startVideo} variant="contained" color="success">
                         Download
                     </Button>
                 </Stack>

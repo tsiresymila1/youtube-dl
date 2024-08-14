@@ -27,8 +27,8 @@ export const HistoryPage = () => {
             </ListItem>
             <GridList>
                 {history.map(e => {
-                    return <GridItem key={e.video.videoId}>
-                        <HistoryItem history={e}/>
+                    return <GridItem key={`${e.video.videoId}-history-grid`}>
+                        <HistoryItem key={`${e.video.videoId}-history`} history={e}/>
                     </GridItem>
                 })}
             </GridList>

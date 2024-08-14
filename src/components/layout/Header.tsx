@@ -1,6 +1,6 @@
 import { AppBar, Badge, IconButton, InputAdornment, Stack, TextField, Toolbar } from '@mui/material'
 
-import { DarkMode, LightMode, LinkOutlined, Menu as MenuIcon, Search } from '@mui/icons-material'
+import { DarkMode, LightMode, LinkOutlined, Menu as MenuIcon, Refresh, Search } from '@mui/icons-material'
 import { useDrawerContext } from '@/components/layout/DrawerProvider'
 import { drawerWidth } from './Sidebar'
 import { useSearchStore } from "@/store/search.ts";
@@ -9,20 +9,23 @@ import { useCallback } from "react";
 import NiceModal from "@ebay/nice-modal-react";
 import { DownloadLinkDialogModal } from "@/components/modal/DownloadLinkModal.tsx";
 import { useModeStore } from "@/store/mode.ts";
-// import { dialog } from "@tauri-apps/api";
-// import { tauriStore } from "@/store/tauri.ts";
-// import { StorageKey } from "@/types.ts";
+import { useLocation, useNavigate } from "react-router";
 
 export function AppHeader() {
     const {toggleDrawer, isMobile} = useDrawerContext()
     const {search} = useSearchStore()
     const {mode, toggleMode} = useModeStore()
+    const location = useLocation()
+    const navigate = useNavigate()
 
     const debouncedSearch = useCallback(
         debounce((value) => {
+            if (value !== "" && location.pathname.endsWith("history")) {
+                navigate('/');
+            }
             search(value)
-        }, 500), // 500ms debounce delay
-        [] // Empty dependency array ensures debounce function is created only once
+        }, 700), // 500ms debounce delay
+        [location, navigate] // Empty dependency array ensures debounce function is created only once
     );
     const downloadLink = useCallback(async () => {
         await NiceModal.show(DownloadLinkDialogModal, {})
@@ -97,6 +100,11 @@ export function AppHeader() {
                         <IconButton onClick={toggleMode}>
                             <Badge badgeContent={0} color="primary">
                                 {mode === "light" ? <LightMode color="action"/> : <DarkMode color="action"/>}
+                            </Badge>
+                        </IconButton>
+                        <IconButton onClick={()=> window.location.reload()}>
+                            <Badge badgeContent={0} color="primary">
+                                <Refresh/>
                             </Badge>
                         </IconButton>
                     </Stack>
