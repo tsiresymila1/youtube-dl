@@ -78,7 +78,7 @@ pub fn show_in_folder(path: String) {
                 }
             };
             Command::new("xdg-open")
-                .arg(&new_path)
+                .args(&new_path)
                 .spawn()
                 .unwrap();
         } else {
@@ -187,8 +187,8 @@ pub async fn merge_video_audio(app: AppHandle, id: String, download_dir: String,
             }
         }
         println!("Removing split video and audio ...")
-        //fs::remove_file(video_path).unwrap();
-        // fs::remove_file(audio_path).unwrap();
+        fs::remove_file(video_path).unwrap();
+        fs::remove_file(audio_path).unwrap();
     } else {
         println!("Video or Audio file not found");
         app.emit_all(
