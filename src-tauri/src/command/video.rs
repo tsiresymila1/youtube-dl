@@ -13,6 +13,7 @@ use rusty_ytdl::{DownloadOptions, Video, VideoError, VideoFormat, VideoInfo, Vid
 use tauri::{AppHandle, command, Manager, Wry};
 use tauri::api::dialog::blocking::FileDialogBuilder;
 use tauri::api::process::Command;
+use tauri::regex::Regex;
 use tauri_plugin_store::{StoreCollection, with_store};
 
 use crate::AppState;
@@ -78,8 +79,9 @@ async fn download_video_format(app: AppHandle, download_event_name: String, id: 
     let total = stream.content_length();
     println!("total size: {}", total);
     let mut total_downloaded = 0;
-    let id = id.clone();
+    let id = id.clone() ;
     let path = Path::new(&download_dir).join(format!("{id}_Video_{filename}"));
+    println!("Path :: {:?}", path);
     let mut file = File::create(path.clone()).map_err(|e| VideoError::DownloadError(e.to_string())).unwrap();
     while let Some(chunk) = stream.chunk().await.unwrap() {
         total_downloaded += chunk.len();
@@ -231,9 +233,16 @@ pub async fn suggest_video(state: tauri::State<'_, AppState>, key: String) -> Re
     }
 }
 
+fn remove_special_characters(filename: &str) -> String {
+    let re = Regex::new(r"[^a-zA-Z0-9._]+").unwrap();
+    let cleaned_filename = re.replace_all(filename, "_");
+    cleaned_filename.into_owned()
+}
+
 #[command]
 pub async fn download_video(id: String, format: u64, filename: String, app: AppHandle) -> Result<String, ()> {
     println!("id: {}", id);
+    let filename = remove_special_characters(filename.as_str());
     println!("filename: {}", filename);
     let origin = Video::new(&id).unwrap();
     let formats = origin.get_info().await.unwrap().formats;

@@ -22,6 +22,11 @@ export type DownloadLinkModalProps = DialogProps
 const DownloadLinkModal = ({...props}: DownloadLinkModalProps) => {
     const [loading, setLoading]= useState<boolean>(false)
     const [link, setLink] = useState<String>("")
+
+    const reset = useCallback(()=> {
+        setLoading(false)
+        setLink("")
+    },[])
     const startVideo = useCallback(async () => {
         setLoading(true)
         try{
@@ -31,13 +36,19 @@ const DownloadLinkModal = ({...props}: DownloadLinkModalProps) => {
             const info = await getVideoInfo(link)
             toast.dismiss(toastId)
             props.onClose?.({}, "escapeKeyDown")
+            reset()
             await NiceModal.show(QualityDialogModal, {
                 info
             })
-        }finally {
-            setLoading(false)
+        }catch(err){
+            toast.dismiss()
+            toast.error(`${err}`)
+            reset()
         }
-    }, [link])
+        finally {
+            reset()
+        }
+    }, [link,reset])
 
     return (
         <Dialog
@@ -59,6 +70,7 @@ const DownloadLinkModal = ({...props}: DownloadLinkModalProps) => {
                         variant='standard'
                         placeholder="Enter youtube link or videoId"
                         margin="dense"
+                        value={link}
                         focused
                         fullWidth
                         InputProps={{
@@ -82,6 +94,7 @@ const DownloadLinkModal = ({...props}: DownloadLinkModalProps) => {
             <DialogActions>
                 <Stack display="flex" direction="row" justifyContent="end" columnGap={1}>
                     <Button onClick={e => {
+                        reset()
                         props.onClose?.(e, "escapeKeyDown")
                     }} variant="contained" color="error">
                         Cancel

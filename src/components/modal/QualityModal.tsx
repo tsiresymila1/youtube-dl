@@ -48,12 +48,13 @@ const QualityModal = ({info, ...props}: CategoryModalProps) => {
             } else {
                 toast.error("FFMPEG not installed. Please install it.", {position: "bottom-right"});
             }
+            setLoading(false)
         } catch (e) {
+            setLoading(false)
             toast.error("Error when downloading video.", {position: "bottom-right"});
         } finally {
             setLoading(false)
         }
-
     }, [info, format])
 
     return (
@@ -87,6 +88,7 @@ const QualityModal = ({info, ...props}: CategoryModalProps) => {
             <DialogActions>
                 <Stack display="flex" direction="row" justifyContent="end" columnGap={1}>
                     <Button onClick={e => {
+                        setLoading(false);
                         props.onClose?.(e, "escapeKeyDown")
                     }} variant="contained" color="error">
                         Cancel
