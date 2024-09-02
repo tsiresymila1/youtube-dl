@@ -13,17 +13,18 @@ import {
 import NiceModal, { useModal } from "@ebay/nice-modal-react";
 import { useHistoryStore } from "@/store/history.ts";
 import { useCallback, useState } from "react";
-import { checkDownload, downloadVideo } from "@/api/command.ts";
+import { downloadVideo } from "@/api/command.ts";
 import { Format, VideoInfo } from "@/types.ts";
 import { useNavigate } from "react-router";
 import { toast } from "react-hot-toast";
 
 export type CategoryModalProps = DialogProps & {
-    info: VideoInfo
+    info: VideoInfo,
+    timestamp: string
 }
 
 
-const QualityModal = ({info, ...props}: CategoryModalProps) => {
+const QualityModal = ({info, timestamp = Date.now().toString(), ...props}: CategoryModalProps) => {
     const navigate = useNavigate()
     const [loading, setLoading] = useState<boolean>(false)
     const [format, setFormat] = useState<Format>([...info.formats].shift()!)
@@ -31,31 +32,27 @@ const QualityModal = ({info, ...props}: CategoryModalProps) => {
     const startVideo = useCallback(async () => {
         setLoading(true)
         try {
-            const canDownload = await checkDownload()
-            if (canDownload) {
-                addVideo(info.videoDetails, format!)
-                props.onClose?.({}, "backdropClick")
-                navigate("/history")
-                const extension = format!.mimeType.split(";").shift()?.split('/').pop() ?? 'mp4'
-                const promise = downloadVideo(info.videoDetails.videoId, format!.itag, `${info.videoDetails.title}.${extension}`)
-                await toast.promise(promise, {
-                    loading: `Downloading "${info.videoDetails.title}"`,
-                    error: `Error downloading "${info.videoDetails.title}"`,
-                    success: "Download success"
-                }, {
-                    position: "bottom-right"
-                })
-            } else {
-                toast.error("FFMPEG not installed. Please install it.", {position: "bottom-right"});
-            }
-            setLoading(false)
+            addVideo(info.videoDetails, format!, timestamp)
+            props.onClose?.({}, "escapeKeyDown")
+            const extension = format!.hasVideo ? format!.mimeType.split(";").shift()?.split('/').pop() ?? 'mp4' : 'mp3'
+            const promise = downloadVideo(info.videoDetails.videoId, format!.itag, `${info.videoDetails.title}.${extension}`, timestamp)
+            toast.promise(promise, {
+                loading: `Downloading "${info.videoDetails.title}"`,
+                error: `Error downloading "${info.videoDetails.title}"`,
+                success: "Download success"
+            }, {
+                position: "bottom-right"
+            }).finally(() => {
+                setLoading(false)
+            })
+            navigate("/history", {replace: true})
         } catch (e) {
             setLoading(false)
             toast.error("Error when downloading video.", {position: "bottom-right"});
         } finally {
             setLoading(false)
         }
-    }, [info, format])
+    }, [info, format, timestamp])
 
     return (
         <Dialog
@@ -81,6 +78,9 @@ const QualityModal = ({info, ...props}: CategoryModalProps) => {
                     >
                         {info.formats.filter(e => e.hasVideo).map(e => {
                             return <MenuItem value={e.itag}>{e.qualityLabel} {e.mimeType.split(";").shift()}</MenuItem>
+                        })}
+                        {info.formats.filter(e => !e.hasVideo).slice(0, 1).map(e => {
+                            return <MenuItem value={e.itag}>{e.qualityLabel} mp3</MenuItem>
                         })}
                     </Select>
                 </FormControl>

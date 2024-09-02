@@ -25,11 +25,9 @@ export const ToasterApp = () => {
                             t.type === "success" ? "success" : t.type === "error" ? "error" : "info"
                         }
                         action={
-                            t.type !== 'loading' ? (
-                                <IconButton onClick={() => toast.dismiss(t.id)}>
-                                    <Close />
-                                </IconButton>
-                            ) : undefined
+                            <IconButton onClick={() => toast.dismiss(t.id)}>
+                                <Close />
+                            </IconButton>
                         }
                     >
                         {message}

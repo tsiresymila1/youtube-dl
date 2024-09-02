@@ -41,8 +41,8 @@ export const getVideoInfo = async (videoId: String) => {
     return await invoke<VideoInfo>("get_video_info", {url: videoId})
 }
 
-export const downloadVideo = async (id: String, format: number, filename: String) => {
-    return await invoke<void>("download_video", {id, format,filename})
+export const downloadVideo = async (id: String, format: number, filename: String,timestamp: string) => {
+    return await invoke<void>("download_video", {id, format,filename,timestamp})
 }
 
 export const checkDownload = async () => {

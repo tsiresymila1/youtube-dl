@@ -12,9 +12,11 @@ export const HistoryPage = () => {
     const navigate = useNavigate()
     return <Screen>
         <Stack>
-            <ListItem secondaryAction={<IconButton onClick={
-                () => navigate(-1)
-            }><Backspace/></IconButton>}>
+            <ListItem secondaryAction={
+                <IconButton onClick={() => navigate(-1)}>
+                    <Backspace/>
+                </IconButton>
+            }>
                 <ListItemText
                     primaryTypographyProps={{fontWeight: 700, variant: 'h2'}}
                     primary="Download history"
@@ -26,8 +28,8 @@ export const HistoryPage = () => {
                 />
             </ListItem>
             <GridList>
-                {history.map(e => {
-                    return <GridItem key={`${e.video.videoId}-history-grid`}>
+                {history.map((e, i) => {
+                    return <GridItem key={`${e.video.videoId}-history-grid-${i}`}>
                         <HistoryItem key={`${e.video.videoId}-history`} history={e}/>
                     </GridItem>
                 })}

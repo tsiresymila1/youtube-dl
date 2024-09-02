@@ -38,7 +38,8 @@ const DownloadLinkModal = ({...props}: DownloadLinkModalProps) => {
             props.onClose?.({}, "escapeKeyDown")
             reset()
             await NiceModal.show(QualityDialogModal, {
-                info
+                info,
+                timestamp: Date.now().toString()
             })
         }catch(err){
             toast.dismiss()

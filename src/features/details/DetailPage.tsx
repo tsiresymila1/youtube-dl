@@ -29,7 +29,8 @@ export const DetailPage = () => {
 
     const askQuality = useCallback(async () => {
         await NiceModal.show(QualityDialogModal, {
-            info: data
+            info: data,
+            timestamp: Date.now().toString()
         })
     }, [data])
 
@@ -51,10 +52,10 @@ export const DetailPage = () => {
                                 controls
                                 width='100%'
                                 height='700px'
-                                style={{ borderRadius: "20px", backgroundColor: "black"}}
+                                style={{borderRadius: "20px", backgroundColor: "black"}}
                                 config={{
                                     youtube: {
-                                        playerVars: { showinfo: 1 }
+                                        playerVars: {showinfo: 1}
                                     }
                                 }}
                             />
@@ -100,26 +101,28 @@ export const DetailPage = () => {
                     </Card>
                 </Stack>
             }
-            <Stack>
-                <ListItem>
-                    <ListItemText
-                        primaryTypographyProps={{fontWeight: 700, variant: 'h2'}}
-                        primary="Related videos"
-                        secondaryTypographyProps={{
-                            maxWidth: 300,
-                            py: 3,
-                            component: 'div',
-                        }}
-                    />
-                </ListItem>
-                <GridList>
-                    {data?.relatedVideos.map(r => {
-                        return <GridItem key={r.id}>
-                            <MovieItem showDetails={false} movie={{Video: r as unknown as Video}}/>
-                        </GridItem>
-                    })}
-                </GridList>
-            </Stack>
+            {data  && data?.relatedVideos.length > 0 ?
+                <Stack>
+                    <ListItem>
+                        <ListItemText
+                            primaryTypographyProps={{fontWeight: 700, variant: 'h2'}}
+                            primary="Related videos"
+                            secondaryTypographyProps={{
+                                maxWidth: 300,
+                                py: 3,
+                                component: 'div',
+                            }}
+                        />
+                    </ListItem>
+                    <GridList>
+                        {data?.relatedVideos.map(r => {
+                            return <GridItem key={r.id}>
+                                <MovieItem showDetails={false} movie={{Video: r as unknown as Video}}/>
+                            </GridItem>
+                        })}
+                    </GridList>
+                </Stack> : null}
+
         </Stack>
     </Screen>
 }

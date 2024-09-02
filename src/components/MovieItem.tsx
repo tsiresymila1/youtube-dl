@@ -6,7 +6,6 @@ import { useNavigate } from "react-router";
 import { SyntheticEvent, useCallback } from "react";
 import NiceModal from "@ebay/nice-modal-react";
 import { QualityDialogModal } from "@/components/modal/QualityModal.tsx";
-import { VideoInfo } from "@/types.ts";
 
 
 
@@ -18,12 +17,6 @@ export type MovieItemProps = {
 export const MovieItem = ({movie,showDetails = true}: MovieItemProps) => {
     const navigate = useNavigate()
 
-    const askQuality = useCallback(async (data: VideoInfo) => {
-        await NiceModal.show(QualityDialogModal, {
-            info: data
-        })
-    }, [])
-
     const viewDetail = useCallback(async(e: SyntheticEvent)=> {
         e.stopPropagation();
         navigate(`/video/${movie.Video.id}`)
@@ -32,7 +25,10 @@ export const MovieItem = ({movie,showDetails = true}: MovieItemProps) => {
     const downloadVideo = useCallback(async(e: SyntheticEvent)=> {
         e.stopPropagation();
         const data = await getVideoInfo(movie.Video.id)
-        await askQuality(data)
+        await NiceModal.show(QualityDialogModal, {
+            info: data,
+            timestamp: Date.now().toString()
+        })
     },[movie, navigate])
 
     return (
